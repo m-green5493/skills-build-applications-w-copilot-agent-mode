@@ -1,10 +1,9 @@
 import express, { Request, Response } from 'express';
-import mongoose from 'mongoose';
+import { connectDatabase } from './database';
 import { Activity, LeaderboardEntry, Team, User, Workout } from './models';
 
 const app = express();
 const port = 8000;
-const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/octofit_db';
 const codespaceName = process.env.CODESPACE_NAME;
 const host = codespaceName ? '0.0.0.0' : 'localhost';
 const apiUrl = codespaceName

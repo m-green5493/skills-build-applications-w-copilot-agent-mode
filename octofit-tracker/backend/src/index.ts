@@ -7,7 +7,7 @@ const port = 8000;
 const codespaceName = process.env.CODESPACE_NAME;
 const host = codespaceName ? '0.0.0.0' : 'localhost';
 const apiUrl = codespaceName
-  ? `https://${codespaceName}-${port}.githubpreview.dev`
+  ? `https://${codespaceName}-${port}.app.github.dev`
   : `http://localhost:${port}`;
 
 app.use(express.json());
@@ -49,10 +49,7 @@ app.get('/api/workouts/', async (_req: Request, res: Response) => {
   res.json(workouts);
 });
 
-mongoose.set('strictQuery', false);
-
-mongoose
-  .connect(mongoUri)
+connectDatabase()
   .then(() => {
     console.log('Connected to MongoDB');
     app.listen(port, host, () => {

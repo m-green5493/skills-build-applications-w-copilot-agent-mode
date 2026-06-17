@@ -2,11 +2,11 @@
   "name": "octofit-tracker-backend",
   "private": true,
   "version": "0.0.1",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "seed": "ts-node-dev --respawn --transpile-only src/scripts/seed.ts"
   },
   "dependencies": {

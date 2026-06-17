@@ -1,42 +1,51 @@
 /**
  * API utility for constructing endpoints.
- * Requires VITE_CODESPACE_NAME environment variable to be set in .env.local
+ *
+ * Behavior:
+ * - If `VITE_CODESPACE_NAME` is set, constructs
+ *   https://${VITE_CODESPACE_NAME}-8000.app.github.dev
+ * - Otherwise falls back to http://localhost:8000 so URLs won't contain `undefined`.
+ *
+ * Note: Define `VITE_CODESPACE_NAME` in .env.local when running in Codespaces.
  */
 
 const getApiBase = (): string => {
-  const codespaceName = import.meta.env.VITE_CODESPACE_NAME;
-  
-  if (!codespaceName) {
-    console.error(
-      'VITE_CODESPACE_NAME environment variable is not set. ' +
-      'Please define it in .env.local (e.g., VITE_CODESPACE_NAME=your-codespace-name)'
-    );
+  const codespaceName = String(import.meta.env.VITE_CODESPACE_NAME || '').trim();
+
+  if (codespaceName) {
+    return `https://${codespaceName}-8000.app.github.dev`;
   }
-  
-  const name = codespaceName || 'localhost:8000';
-  const protocol = codespaceName ? 'https' : 'http';
-  const baseUrl = `${protocol}://${name}-8000.app.github.dev`;
-  
-  return baseUrl;
+
+  // Safe local fallback to avoid malformed URLs like https://undefined-8000...
+  return 'http://localhost:8000';
 };
 
 export const getApiUrl = (endpoint: string): string => {
   const base = getApiBase();
-  return `${base}/api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${base}/api${path}`;
 };
 
 /**
- * Parse paginated or array responses
- * Handles both { data: T[], pagination: {...} } and T[] formats
+ * Parse API responses and return an array of items.
+ * Supports multiple common shapes:
+ * - T[]
+ * - { results: T[], next, previous }
+ * - { data: T[], pagination }
+ * - { items: T[] }
  */
-export const parseResponse = <T>(
-  response: any
-): T[] => {
-  if (Array.isArray(response)) {
-    return response;
+export const parseResponse = <T>(response: any): T[] => {
+  if (!response) return [];
+  if (Array.isArray(response)) return response as T[];
+  if (Array.isArray(response.results)) return response.results as T[];
+  if (Array.isArray(response.data)) return response.data as T[];
+  if (Array.isArray(response.items)) return response.items as T[];
+
+  // Some backends wrap data under a single key matching the resource name.
+  // As a last resort, look for the first array-valued property.
+  for (const key of Object.keys(response)) {
+    if (Array.isArray(response[key])) return response[key] as T[];
   }
-  if (response && Array.isArray(response.data)) {
-    return response.data;
-  }
+
   return [];
 };
